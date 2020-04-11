@@ -38,13 +38,14 @@ print(generateLatLon(y0, x0, r))
 #writer = csv.writer(file)
 
 jsonObjs = []
-for i in range(0,10):
+for i in range(0,500000):
     lat, lon, price, beds = generateLatLon(y0, x0, r)
     jsonObj = {"lat": lat, "lon": lon, "price": price, "beds": beds }
     jsonObjs.append(jsonObj)
     point = str(lon)+" "+str(lat)
     print(point)
-    cur.execute("INSERT INTO listings (geo) VALUES (ST_GeomFromText('POINT(-0.32376842224456137 51.48206695356913)', 26910))")
+    cur.execute("INSERT INTO listings (geom) VALUES (ST_GeomFromText('POINT("+point+")', 26910))")
+    conn.commit()
 with open("randGeo.json", "w") as jsonFile:
     json.dump(jsonObjs, jsonFile)
 
