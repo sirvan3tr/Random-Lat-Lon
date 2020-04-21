@@ -1,6 +1,16 @@
 import random, math, csv, json
 import psycopg2
-
+'''
+CREATE TABLE listings (
+	id SERIAL PRIMARY KEY,
+	geom GEOMETRY(Point, 26910),
+	name VARCHAR(128),
+	beds SMALLINT,
+	price INTEGER,
+	gridID INTEGER,
+	propType VARCHAR(128)
+);
+'''
 conn = psycopg2.connect(user="postgres", host="localhost", port="5432", database="smartCommuter")
 cur = conn.cursor()
 print (conn.get_dsn_parameters(),"\n")
@@ -27,24 +37,27 @@ def generateLatLon(y0, x0, r):
     randLat = y + y0
     randLon = x0 + x1
     
+    propTypes = ['Studio', 'Flat', 'Semi-detached House', 'Detached House']
     price = random.randint(100000,1500000)
     beds = random.randint(1,10)
-    return(randLat, randLon, price, beds)
+    propType = propTypes[random.randint(0,3)]
+    return(randLat, randLon, beds, price, propType)
 
 
 print(generateLatLon(y0, x0, r))
 
-#file = open('rand_geo.csv', 'w')
-#writer = csv.writer(file)
-
 jsonObjs = []
 for i in range(0,500000):
-    lat, lon, price, beds = generateLatLon(y0, x0, r)
-    jsonObj = {"lat": lat, "lon": lon, "price": price, "beds": beds }
+    lat, lon, beds, price, propType = generateLatLon(y0, x0, r)
+    jsonObj = {"lat": lat,
+                "lon": lon,
+                "price": price,
+                "beds": beds,
+                "propType": propType
+            }
     jsonObjs.append(jsonObj)
     point = str(lon)+" "+str(lat)
-    print(point)
-    cur.execute("INSERT INTO listings (geom) VALUES (ST_GeomFromText('POINT("+point+")', 26910))")
+    cur.execute("INSERT INTO listings (geom, beds, price, propType) VALUES (ST_GeomFromText('POINT("+point+")', 26910), %s, %s, %s)", (beds, price, propType))
     conn.commit()
 with open("randGeo.json", "w") as jsonFile:
     json.dump(jsonObjs, jsonFile)
