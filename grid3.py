@@ -23,17 +23,12 @@ def getCarTravelTime(starting, ending):
 
 # Initial starting point
 # Top right
-lat0 = 51.678288
-lon0 = -0.471079
-x = [
-11,12,13,14,
-21,22,23,24,
-31,32,33,34,
-41, 42, 43, 44
-]
+
+lat0 = 51.661103
+lon0 = -0.262534
 
 json_file = []
-n =  200 #grid width and height
+n =  50 #grid width and height
 d = 0.005 #grid diff in degrees
 for i in range(0,n):
     tlon = lon0
@@ -47,38 +42,36 @@ for i in range(0,n):
 
         json_file.append(temp)
 
-with open('grid2.json', 'w') as file:
+with open('grid3.json', 'w') as file:
     json.dump(json_file, file)
 
 toc = time.perf_counter()
 print(f"Dumped json at: {toc - tic:0.4f} seconds")
 
 duration_matrix = []
+# Concat the grid coords
+coords = ""
+for i in json_file:
+    coords = coords + str(i['lon'])+","+str(i['lat'])+";"
+coords = coords[:-1]
 
-total_count = 0
-total = pow(n,4)
-i_count = 0
+# sources
+sources = "-0.175548,51.498627;-0.260069,51.512937;-0.125999,51.425689"
+
+count = 0
+total = pow(n,2)
 for i in json_file:
     start = str(i['lon'])+","+str(i['lat'])
-    j_count = 0
-    for j in json_file:
-        if(j_count<=i_count):
-            duration_matrix.append(0)
-        else:
-            end = str(j['lon'])+","+str(j['lat'])
-            car_dur = getCarTravelTime(start, end)
-            duration_matrix.append(car_dur)
-        j_count = j_count + 1
-        print(total_count,total)
-        total_count = total_count + 1
-    i_count = i_count + 1
+    # do the heavy lifting
+    r = requests.get("http://127.0.0.1:5000/table/v1/driving/"+start+";"+coords+"?sources=0")
+    print("length: ", len(r.json()['durations']))
+    duration_matrix.append(r.json())
+    print(count, total)
+    count = count + 1
 
-with open('duration_matrix2', 'wb') as fp:
+with open('duration_matrix3', 'wb') as fp:
     pickle.dump(duration_matrix, fp)
 
+# The timer
 toc = time.perf_counter()
 print(f"Calculated travel time: {toc - tic:0.4f} seconds")
-'''
-with open ('duration_matrix', 'rb') as fp:
-    itemlist = pickle.load(fp)
-'''
