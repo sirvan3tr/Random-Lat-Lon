@@ -27,16 +27,20 @@ locs = [{
     'lon': -0.102408,
     'lat': 51.495914
     }]
+
 lat0 = 51.661103
 lon0 = -0.262534
 n =  50 #grid width and height
 d = 0.005 #grid diff in degrees
+
 glocs = []
+
 for i in locs:
     print(i)
     index = getGridIndex(i['lon'], i['lat'], lon0, lat0, d)
     g = linearGrid(index[0], index[1], n)
     glocs.append(g)
+
 smallest_g = 999999999999999
 for i in range(0,pow(n,2)):
     sum = 0
